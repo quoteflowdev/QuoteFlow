@@ -1,8 +1,9 @@
 from sqlalchemy import Column, Integer, String
 from app.database.connection import engine
-from sqlalchemy.orm import declarative_base
+from app.database.base import Base
+from sqlalchemy.orm import relationship
 
-Base = declarative_base()
+
 
 class Company(Base):
     __tablename__ = "companies"
@@ -16,5 +17,6 @@ class Company(Base):
     company_address = Column(String)
     gst_number = Column(String, unique=True, index=True)
     password = Column(String)  # Store hashed password in production
+    customers = relationship("Customer", back_populates="company")
 
 Base.metadata.create_all(bind=engine)
