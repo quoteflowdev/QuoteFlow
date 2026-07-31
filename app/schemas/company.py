@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 
 class CompanyBase(BaseModel):
@@ -10,15 +11,19 @@ class CompanyBase(BaseModel):
     phone_number: str
     business_type: str
     company_address: str
-    gst_number: str
+    gst_number: Optional[str] = None
 
 
 class CompanyCreate(CompanyBase):
     password: str
 
 
-class CompanyUpdate(CompanyBase):
-    pass
+class CompanyUpdate(BaseModel):
+    company_name: Optional[str] = None
+    owner_name: Optional[str] = None
+    business_type: Optional[str] = None
+    company_address: Optional[str] = None
+    gst_number: Optional[str] = None
 
 
 class CompanyResponse(CompanyBase):
@@ -29,8 +34,3 @@ class CompanyResponse(CompanyBase):
 
     class Config:
         from_attributes = True
-
-
-class CompanyLogin(BaseModel):
-    email: EmailStr
-    password: str

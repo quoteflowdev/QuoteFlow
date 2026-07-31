@@ -1,9 +1,9 @@
-from sqlalchemy import Column, Integer, String
+from datetime import datetime
+
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from app.database.connection import engine
 from app.database.base import Base
 from sqlalchemy.orm import relationship
-
-
 
 class Company(Base):
     __tablename__ = "companies"
@@ -17,6 +17,11 @@ class Company(Base):
     company_address = Column(String)
     gst_number = Column(String, unique=True, index=True)
     password = Column(String)  # Store hashed password in production
-    customers = relationship("Customer", back_populates="company")
 
+    is_active = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    customers = relationship("Customer", back_populates="company")
 Base.metadata.create_all(bind=engine)

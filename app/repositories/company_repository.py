@@ -32,3 +32,13 @@ class CompanyRepository:
             email: str
     ):
         return db.query(Company).filter(Company.email == email).first()
+
+    def update_company(
+            self,
+            db: Session,
+            company: Company
+    ):
+        db.commit()
+        db.refresh(company)
+
+        return company

@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
-from app.schemas.company import CompanyCreate
+from app.schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse
 from app.models.company import Company
-from app.repositories.company_repository import CompanyRepository
 from app.services.company_service import CompanyService
 from app.core.auth import create_access_token, verify_access_token
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
@@ -108,3 +108,33 @@ async def token_login(
         "access_token": token,
         "token_type": "bearer"
     }
+
+@router.put("/companies/profile", response_model=CompanyResponse)
+async def update_company(
+    company_update: CompanyUpdate,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme)
+):
+    payload = verify_access_token(token)
+
+    if not payload:
+        raise HTTPException(
+        status_code=401,
+        detail="Invalid or expired token"
+    )
+
+    company_service = CompanyService()
+
+    updated_company = company_service.update_company(
+    db,
+    payload.get("company_id"),
+    company_update
+    )
+
+    if not updated_company:
+        raise HTTPException(
+        status_code=404,
+        detail="Company not found"
+    )
+
+    return updated_company
