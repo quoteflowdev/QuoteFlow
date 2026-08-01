@@ -1,7 +1,7 @@
 from datetime import datetime
-
-from pydantic import BaseModel, EmailStr
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class CompanyBase(BaseModel):
@@ -28,9 +28,8 @@ class CompanyUpdate(BaseModel):
 
 class CompanyResponse(CompanyBase):
     id: int
-    is_active: bool
+    status: str
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

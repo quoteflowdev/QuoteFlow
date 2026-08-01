@@ -1,44 +1,79 @@
 from sqlalchemy.orm import Session
+
 from app.models.company import Company
 
+
 class CompanyRepository:
+
     def create_company(
-            self, 
-            db: Session, 
-            company: Company
-    ):
-        db.add(company)
-        db.commit()
-        db.refresh(company)
+        self,
+        db: Session,
+        company: Company
+    ) -> Company:
 
-        return company
+        try:
+            db.add(company)
+            db.commit()
+            db.refresh(company)
 
-    def get_company(
-            self,
-            db
-    ):
-        return db.query(Company).all()
+            return company
+
+        except Exception:
+            db.rollback()
+            raise
+
+    def get_companies(
+        self,
+        db: Session
+    ) -> list[Company]:
+
+        return (
+            db.query(Company)
+            .all()
+        )
 
     def get_company_by_id(
-            self,
-            db: Session,
-            company_id: int
-    ):
-        return db.query(Company).filter(Company.id == company_id).first()
+        self,
+        db: Session,
+        company_id: int
+    ) -> Company | None:
 
-    def get_company_by_email(
-            self,
-            db: Session,
-            email: str
-    ):
-        return db.query(Company).filter(Company.email == email).first()
+        return (
+            db.query(Company)
+            .filter(Company.id == company_id)
+            .first()
+        )
 
     def update_company(
-            self,
-            db: Session,
-            company: Company
-    ):
-        db.commit()
-        db.refresh(company)
+        self,
+        db: Session,
+        company: Company
+    ) -> Company:
 
-        return company
+        try:
+            db.commit()
+            db.refresh(company)
+
+            return company
+
+        except Exception:
+            db.rollback()
+            raise
+
+    def deactivate_company(
+        self,
+        db: Session,
+        company: Company
+    ) -> Company:
+
+        company.status = "INACTIVE"
+
+        try:
+            db.commit()
+            db.refresh(company)
+
+            return company
+
+        except Exception:
+            db.rollback()
+            raise

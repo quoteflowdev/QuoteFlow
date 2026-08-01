@@ -1,71 +1,131 @@
-from app.repositories.company_repository import CompanyRepository
+from sqlalchemy.orm import Session
+
 from app.core.security import hash_password
-from app.core.security import verify_password
+from app.models.company import Company
+from app.repositories.auth_repository import AuthRepository
+from app.repositories.company_repository import CompanyRepository
+from app.schemas.company import (
+    CompanyCreate,
+    CompanyUpdate
+)
+
 
 class CompanyService:
-    def create_company(self, db, company):
 
-        # Hash the company's password before saving
-        company.password = hash_password(company.password)
+    def __init__(self):
+        self.company_repository = CompanyRepository()
+        self.auth_repository = AuthRepository()
 
-        company_repository = CompanyRepository()
+    def create_company(
+        self,
+        db: Session,
+        company_data: CompanyCreate
+    ) -> Company:
 
-        saved_company = company_repository.create_company(db, company)
+        if self.auth_repository.get_company_by_email(
+            db,
+            company_data.email
+        ):
+            raise ValueError("Email already registered.")
 
-        return saved_company
+        if self.auth_repository.get_company_by_phone(
+            db,
+            company_data.phone_number
+        ):
+            raise ValueError("Phone number already registered.")
 
-    def get_all_companies(self, db):
+        existing_gst = (
+            db.query(Company)
+            .filter(
+                Company.gst_number == company_data.gst_number
+            )
+            .first()
+        )
 
-        company_repository = CompanyRepository()
+        if existing_gst:
+            raise ValueError("GST number already registered.")
 
-        companies = company_repository.get_company(db)
+        company = Company(
+            company_name=company_data.company_name,
+            owner_name=company_data.owner_name,
+            email=company_data.email,
+            phone_number=company_data.phone_number,
+            business_type=company_data.business_type,
+            company_address=company_data.company_address,
+            gst_number=company_data.gst_number,
+            password=hash_password(company_data.password)
+        )
 
-        return companies
+        return self.company_repository.create_company(
+            db,
+            company
+        )
 
-    def get_company_by_id(self, db, company_id):
+    def get_all_companies(
+        self,
+        db: Session
+    ) -> list[Company]:
 
-        company_repository = CompanyRepository()
+        return self.company_repository.get_companies(db)
 
-        company = company_repository.get_company_by_id(db, company_id)
+    def get_company_by_id(
+        self,
+        db: Session,
+        company_id: int
+    ) -> Company | None:
 
-        return company
+        return self.company_repository.get_company_by_id(
+            db,
+            company_id
+        )
 
-    def login_company(self, db, email, password):
+    def update_company(
+        self,
+        db: Session,
+        company_id: int,
+        company_update: CompanyUpdate
+    ) -> Company | None:
 
-        company_repository = CompanyRepository()
+        company = self.company_repository.get_company_by_id(
+            db,
+            company_id
+        )
 
-        company = company_repository.get_company_by_email(db, email)
-
-        if not company:
+        if company is None:
             return None
 
-        # Verify the password
-        if not verify_password(password, company.password):
+        update_data = company_update.model_dump(
+            exclude_unset=True,
+            exclude_none=True
+        )
+
+        for field, value in update_data.items():
+            setattr(
+                company,
+                field,
+                value
+            )
+
+        return self.company_repository.update_company(
+            db,
+            company
+        )
+
+    def deactivate_company(
+        self,
+        db: Session,
+        company_id: int
+    ) -> Company | None:
+
+        company = self.company_repository.get_company_by_id(
+            db,
+            company_id
+        )
+
+        if company is None:
             return None
 
-        return company
-
-    def update_company(self, db, company_id, company_update):
-        company_repository = CompanyRepository()
-
-        company = company_repository.get_company_by_id(db, company_id)
-
-        if not company:
-            return None
-
-        if company_update.company_name is not None:
-            company.company_name = company_update.company_name
-
-        if company_update.owner_name is not None:
-            company.owner_name = company_update.owner_name
-
-        if company_update.business_type is not None:
-            company.business_type = company_update.business_type
-
-        if company_update.company_address is not None:
-            company.company_address = company_update.company_address
-
-        if company_update.gst_number is not None:
-            company.gst_number = company_update.gst_number
-
-        return company_repository.update_company(db, company)
+        return self.company_repository.deactivate_company(
+            db,
+            company
+        )

@@ -1,27 +1,49 @@
-from datetime import datetime
-
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
-from app.database.connection import engine
-from app.database.base import Base
+from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+
+from app.database.base import Base
+
 
 class Company(Base):
     __tablename__ = "companies"
 
     id = Column(Integer, primary_key=True, index=True)
-    company_name = Column(String, unique=True, index=True)
-    owner_name = Column(String)
-    email = Column(String, unique=True, index=True)
-    phone_number = Column(String)
-    business_type = Column(String)
-    company_address = Column(String)
-    gst_number = Column(String, unique=True, index=True)
-    password = Column(String)  # Store hashed password in production
 
-    is_active = Column(Boolean, default=True)
+    company_name = Column(String, nullable=False, index=True)
+    owner_name = Column(String, nullable=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    email = Column(String, unique=True, nullable=False, index=True)
+    phone_number = Column(String, unique=True, nullable=False, index=True)
 
-    customers = relationship("Customer", back_populates="company")
-Base.metadata.create_all(bind=engine)
+    business_type = Column(String, nullable=False)
+    company_address = Column(String, nullable=False)
+
+    gst_number = Column(String, unique=True, nullable=True, index=True)
+
+    password = Column(String, nullable=False)
+
+    status = Column(
+        String,
+        nullable=False,
+        default="ACTIVE",
+        index=True
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
+
+    customers = relationship(
+        "Customer",
+        back_populates="company"
+    )
