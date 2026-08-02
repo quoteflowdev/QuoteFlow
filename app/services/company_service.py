@@ -4,10 +4,7 @@ from app.core.security import hash_password
 from app.models.company import Company
 from app.repositories.auth_repository import AuthRepository
 from app.repositories.company_repository import CompanyRepository
-from app.schemas.company import (
-    CompanyCreate,
-    CompanyUpdate
-)
+from app.schemas.company import (CompanyCreate, CompanyUpdate)
 
 
 class CompanyService:

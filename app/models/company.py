@@ -47,3 +47,11 @@ class Company(Base):
         "Customer",
         back_populates="company"
     )
+
+    products = relationship(
+        "Product",
+        foreign_keys="Product.company_id",
+        primaryjoin="Company.id == Product.company_id",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )

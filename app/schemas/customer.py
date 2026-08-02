@@ -1,35 +1,53 @@
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class CustomerBase(BaseModel):
     customer_name: str
     phone: str
-    email: EmailStr | None = None
-    address_line_1: str | None = None
-    address_line_2: str | None = None
-    city: str | None = None
-    state: str | None = None
-    postal_code: str | None = None
-    country: str | None = None
-    gst_number: str | None = None
+    email: Optional[EmailStr] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = "India"
+    gst_number: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class CustomerCreate(CustomerBase):
     pass
 
 
-class CustomerUpdate(CustomerBase):
-    pass
+class CustomerUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[EmailStr] = None
+    address_line_1: Optional[str] = None
+    address_line_2: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    postal_code: Optional[str] = None
+    country: Optional[str] = None
+    gst_number: Optional[str] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
 
 
 class CustomerResponse(CustomerBase):
     id: int
     company_id: int
-    is_active: bool
+    customer_code: str
+    status: str
+    created_by: Optional[int] = None
+    updated_by: Optional[int] = None
+    version: int
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True
+    )

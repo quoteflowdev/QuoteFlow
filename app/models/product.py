@@ -1,24 +1,21 @@
-from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, UniqueConstraint)
+from sqlalchemy import (Boolean, Column, DateTime, Enum as SqlEnum, Integer, String, ForeignKey, UniqueConstraint,)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
+from app.core.enums import (CalculationType, Status, Unit,)
 from app.database.base import Base
 
 
-class Customer(Base):
-    __tablename__ = "customers"
+class Product(Base):
+    __tablename__ = "products"
 
     __table_args__ = (
         UniqueConstraint(
             "company_id",
-            "phone",
-            name="uq_company_phone",
+            "product_name",
+            name="uq_company_product_name",
         ),
     )
-
-    __mapper_args__ = {
-        "eager_defaults": True
-    }
 
     id = Column(
         Integer,
@@ -29,79 +26,64 @@ class Customer(Base):
     company_id = Column(
         Integer,
         ForeignKey("companies.id"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
-    customer_code = Column(
+    product_code = Column(
         String(20),
         unique=True,
         nullable=False,
         index=True,
     )
 
-    customer_name = Column(
+    product_name = Column(
         String(100),
         nullable=False,
     )
 
-    phone = Column(
-        String(10),
+    calculation_type = Column(
+        SqlEnum(CalculationType),
         nullable=False,
-        index=True,
     )
 
-    email = Column(
-        String(255),
-        nullable=True,
-        index=True,
-    )
-
-    address_line_1 = Column(
-        String(255),
-        nullable=True,
-    )
-
-    address_line_2 = Column(
-        String(255),
-        nullable=True,
-    )
-
-    city = Column(
-        String(100),
-        nullable=True,
-    )
-
-    state = Column(
-        String(100),
-        nullable=True,
-    )
-
-    postal_code = Column(
-        String(10),
-        nullable=True,
-    )
-
-    country = Column(
-        String(100),
+    default_unit = Column(
+        SqlEnum(Unit),
         nullable=False,
-        default="India",
     )
 
-    gst_number = Column(
-        String(15),
+    allow_decimal = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    display_order = Column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    icon = Column(
+        String(50),
         nullable=True,
     )
 
-    notes = Column(
+    description = Column(
         String(500),
         nullable=True,
     )
 
-    status = Column(
-        String(20),
+    is_system = Column(
+        Boolean,
         nullable=False,
-        default="ACTIVE",
+        default=False,
+    )
+
+    status = Column(
+        SqlEnum(Status),
+        nullable=False,
+        default=Status.ACTIVE,
         index=True,
     )
 
@@ -135,5 +117,5 @@ class Customer(Base):
     company = relationship(
         "Company",
         foreign_keys=[company_id],
-        back_populates="customers",
+        back_populates="products",
     )

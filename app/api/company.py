@@ -2,17 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.core.auth import (
-    create_access_token,
-    get_current_company
-)
+from app.core.auth import (create_access_token, get_current_company)
 from app.database.connection import get_db
 from app.models.company import Company
-from app.schemas.company import (
-    CompanyCreate,
-    CompanyResponse,
-    CompanyUpdate
-)
+from app.schemas.company import (CompanyCreate, CompanyResponse, CompanyUpdate)
 from app.services.auth_services import AuthService
 from app.services.company_service import CompanyService
 
@@ -122,10 +115,7 @@ async def token_login(
     }
 
 
-@router.put(
-    "/companies/profile",
-    response_model=CompanyResponse
-)
+@router.put("/companies/profile", response_model=CompanyResponse)
 async def update_company(
     company_update: CompanyUpdate,
     db: Session = Depends(get_db),

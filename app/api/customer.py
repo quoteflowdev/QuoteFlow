@@ -1,73 +1,155 @@
-from fastapi import APIRouter, Depends
+from fastapi import (APIRouter, Depends, HTTPException, Query, status)
 from sqlalchemy.orm import Session
-from app.database.connection import get_db
-from app.models.customer import Customer
-from app.schemas.customer import CustomerCreate
-from app.services.customer_service import CustomerService
+
 from app.core.auth import get_current_company
+from app.database.connection import get_db
+from app.models.company import Company
+from app.schemas.customer import (CustomerCreate, CustomerResponse, CustomerUpdate)
+from app.services.customer_service import CustomerService
+
 
 router = APIRouter()
 
+customer_service = CustomerService()
 
-@router.post("/customers/")
+
+@router.post("/customers/", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED,)
 async def create_customer(
     customer: CustomerCreate,
-    current_company: dict = Depends(get_current_company),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
 ):
-    db_customer = Customer(
-        company_id=current_company["company_id"],
-        customer_name=customer.customer_name,
-        phone=customer.phone,
-        email=customer.email,
-        address_line_1=customer.address_line_1,
-        address_line_2=customer.address_line_2,
-        city=customer.city,
-        state=customer.state,
-        postal_code=customer.postal_code,
-        country=customer.country,
-        gst_number=customer.gst_number,
+
+    saved_customer = customer_service.create_customer(
+        db=db,
+        company_id=current_company.id,
+        customer_data=customer,
     )
 
-    customer_service = CustomerService()
+    if saved_customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Customer with this phone number or email already exists.",
+        )
 
-    saved_customer = customer_service.create_customer(db, db_customer)
-
-    return {
-        "message": "Customer created successfully",
-        "data": saved_customer
-    }
+    return saved_customer
 
 
-@router.get("/customers/")
+@router.get("/customers/", response_model=list[CustomerResponse],)
 async def get_all_customers(
     db: Session = Depends(get_db),
-    current_company: dict = Depends(get_current_company)
+    current_company: Company = Depends(get_current_company),
 ):
-    
-    customer_service = CustomerService()
-  
-    customers = customer_service.get_all_customers(db=db, company_id=current_company["company_id"])
 
-    return {
-        "message": "Customers retrieved successfully",
-        "data": customers
-    }
+    return customer_service.get_all_customers(
+        db=db,
+        company_id=current_company.id,
+    )
 
 
-@router.get("/customers/{customer_id}")
+@router.get("/customers/search/", response_model=list[CustomerResponse],)
+async def search_customers(
+    search: str = Query(..., min_length=1),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
+):
+
+    return customer_service.search_customers(
+        db=db,
+        company_id=current_company.id,
+        search=search,
+        page=page,
+        limit=limit,
+    )
+
+
+@router.get("/customers/{customer_id}", response_model=CustomerResponse,)
 async def get_customer_by_id(
     customer_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
 ):
-    customer_service = CustomerService()
 
-    customer = customer_service.get_customer_by_id(db, customer_id)
+    customer = customer_service.get_customer_by_id(
+        db=db,
+        company_id=current_company.id,
+        customer_id=customer_id,
+    )
 
-    if not customer:
-        return {"message": "Customer not found"}
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found.",
+        )
 
-    return {
-        "message": "Customer retrieved successfully",
-        "data": customer
-    }
+    return customer
+
+
+@router.put("/customers/{customer_id}", response_model=CustomerResponse,)
+async def update_customer(
+    customer_id: int,
+    customer_update: CustomerUpdate,
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
+):
+
+    customer = customer_service.update_customer(
+        db=db,
+        company_id=current_company.id,
+        customer_id=customer_id,
+        customer_update=customer_update,
+    )
+
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found or phone/email already exists.",
+        )
+
+    return customer
+
+
+@router.patch("/customers/{customer_id}/deactivate", response_model=CustomerResponse,)
+async def deactivate_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
+):
+
+    customer = customer_service.deactivate_customer(
+        db=db,
+        company_id=current_company.id,
+        customer_id=customer_id,
+    )
+
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found.",
+        )
+
+    return customer
+
+
+@router.patch("/customers/{customer_id}/restore", response_model=CustomerResponse,)
+async def restore_customer(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_company: Company = Depends(get_current_company),
+):
+
+    customer = customer_service.restore_customer(
+        db=db,
+        company_id=current_company.id,
+        customer_id=customer_id,
+    )
+
+    if customer is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer not found.",
+        )
+
+    return customer
