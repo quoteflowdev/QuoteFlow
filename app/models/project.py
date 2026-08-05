@@ -1,21 +1,13 @@
-from sqlalchemy import (Boolean, Column, DateTime, Enum as SqlEnum, Integer, String, ForeignKey, UniqueConstraint,)
+from sqlalchemy import (Column, DateTime, Enum as SqlEnum, ForeignKey, Integer, String,)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.core.enums import (CalculationType, Status, Unit,)
+from app.core.enums import (ProjectStatus, Status,)
 from app.database.base import Base
 
 
-class Product(Base):
-    __tablename__ = "products"
-
-    __table_args__ = (
-        UniqueConstraint(
-            "company_id",
-            "product_name",
-            name="uq_company_product_name",
-        ),
-    )
+class Project(Base):
+    __tablename__ = "projects"
 
     id = Column(
         Integer,
@@ -26,47 +18,53 @@ class Product(Base):
     company_id = Column(
         Integer,
         ForeignKey("companies.id"),
-        nullable=True,
+        nullable=False,
         index=True,
     )
 
-    product_code = Column(
+    customer_id = Column(
+        Integer,
+        ForeignKey("customers.id"),
+        nullable=False,
+        index=True,
+    )
+
+    project_code = Column(
         String(20),
         unique=True,
         nullable=False,
         index=True,
     )
 
-    product_name = Column(
+    project_name = Column(
+        String(150),
+        nullable=False,
+    )
+
+    site_address = Column(
+        String(500),
+        nullable=False,
+    )
+
+    site_contact_name = Column(
         String(100),
-        nullable=False,
+        nullable=True,
     )
 
-    calculation_type = Column(
-        SqlEnum(CalculationType),
-        nullable=False,
+    site_contact_number = Column(
+        String(20),
+        nullable=True,
     )
 
-    default_unit = Column(
-        SqlEnum(Unit),
-        nullable=False,
-    )
-
-    allow_decimal = Column(
-        Boolean,
-        nullable=False,
-        default=True,
-    )
-
-    description = Column(
+    remarks = Column(
         String(500),
         nullable=True,
     )
 
-    is_system = Column(
-        Boolean,
+    project_status = Column(
+        SqlEnum(ProjectStatus),
         nullable=False,
-        default=False,
+        default=ProjectStatus.NEW,
     )
 
     status = Column(
@@ -106,11 +104,17 @@ class Product(Base):
     company = relationship(
         "Company",
         foreign_keys=[company_id],
-        back_populates="products",
+        back_populates="projects",
+    )
+
+    customer = relationship(
+        "Customer",
+        foreign_keys=[customer_id],
+        back_populates="projects",
     )
 
     measurements = relationship(
         "Measurement",
-        back_populates="product",
+        back_populates="project",
         cascade="all, delete-orphan",
     )

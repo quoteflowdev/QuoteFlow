@@ -1,7 +1,8 @@
-from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, UniqueConstraint)
+from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, UniqueConstraint, Enum as SqlEnum,)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
+from app.core.enums import Status
 from app.database.base import Base
 
 
@@ -99,7 +100,7 @@ class Customer(Base):
     )
 
     status = Column(
-        String(20),
+        SqlEnum(Status),
         nullable=False,
         default="ACTIVE",
         index=True,
@@ -136,4 +137,9 @@ class Customer(Base):
         "Company",
         foreign_keys=[company_id],
         back_populates="customers",
+    )
+
+    projects = relationship(
+        "Project",
+        back_populates="customer",
     )

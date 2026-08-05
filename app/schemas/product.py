@@ -29,8 +29,6 @@ class ProductUpdate(BaseModel):
     calculation_type: Optional[CalculationType] = None
     default_unit: Optional[Unit] = None
     allow_decimal: Optional[bool] = None
-    display_order: Optional[int] = None
-    icon: Optional[str] = None
     description: Optional[str] = None
     status: Optional[Status] = None
 

@@ -1,21 +1,13 @@
-from sqlalchemy import (Boolean, Column, DateTime, Enum as SqlEnum, Integer, String, ForeignKey, UniqueConstraint,)
+from sqlalchemy import (Column, DateTime, Enum as SqlEnum, ForeignKey, Integer, String,)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.core.enums import (CalculationType, Status, Unit,)
+from app.core.enums import Status
 from app.database.base import Base
 
 
-class Product(Base):
-    __tablename__ = "products"
-
-    __table_args__ = (
-        UniqueConstraint(
-            "company_id",
-            "product_name",
-            name="uq_company_product_name",
-        ),
-    )
+class Measurement(Base):
+    __tablename__ = "measurements"
 
     id = Column(
         Integer,
@@ -26,47 +18,34 @@ class Product(Base):
     company_id = Column(
         Integer,
         ForeignKey("companies.id"),
-        nullable=True,
+        nullable=False,
         index=True,
     )
 
-    product_code = Column(
+    project_id = Column(
+        Integer,
+        ForeignKey("projects.id"),
+        nullable=False,
+        index=True,
+    )
+
+    product_id = Column(
+        Integer,
+        ForeignKey("products.id"),
+        nullable=False,
+        index=True,
+    )
+
+    measurement_code = Column(
         String(20),
         unique=True,
         nullable=False,
         index=True,
     )
 
-    product_name = Column(
-        String(100),
+    measurement_name = Column(
+        String(150),
         nullable=False,
-    )
-
-    calculation_type = Column(
-        SqlEnum(CalculationType),
-        nullable=False,
-    )
-
-    default_unit = Column(
-        SqlEnum(Unit),
-        nullable=False,
-    )
-
-    allow_decimal = Column(
-        Boolean,
-        nullable=False,
-        default=True,
-    )
-
-    description = Column(
-        String(500),
-        nullable=True,
-    )
-
-    is_system = Column(
-        Boolean,
-        nullable=False,
-        default=False,
     )
 
     status = Column(
@@ -105,12 +84,21 @@ class Product(Base):
 
     company = relationship(
         "Company",
-        foreign_keys=[company_id],
-        back_populates="products",
+        back_populates="measurements",
     )
 
-    measurements = relationship(
-        "Measurement",
-        back_populates="product",
+    project = relationship(
+        "Project",
+        back_populates="measurements",
+    )
+
+    product = relationship(
+        "Product",
+        back_populates="measurements",
+    )
+
+    items = relationship(
+        "MeasurementItem",
+        back_populates="measurement",
         cascade="all, delete-orphan",
     )

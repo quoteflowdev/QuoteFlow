@@ -52,8 +52,6 @@ class ProductService:
             calculation_type=product_data.calculation_type,
             default_unit=product_data.default_unit,
             allow_decimal=product_data.allow_decimal,
-            display_order=product_data.display_order,
-            icon=product_data.icon,
             description=product_data.description,
             is_system=False,
             created_by=company_id,

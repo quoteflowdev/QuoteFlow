@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Enum as SqlEnum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
+from app.core.enums import Status
 from app.database.base import Base
 
 
@@ -24,9 +25,9 @@ class Company(Base):
     password = Column(String, nullable=False)
 
     status = Column(
-        String,
+        SqlEnum(Status),
         nullable=False,
-        default="ACTIVE",
+        default=Status.ACTIVE,
         index=True
     )
 
@@ -52,6 +53,18 @@ class Company(Base):
         "Product",
         foreign_keys="Product.company_id",
         primaryjoin="Company.id == Product.company_id",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    projects = relationship(
+        "Project",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    measurements = relationship(
+        "Measurement",
         back_populates="company",
         cascade="all, delete-orphan"
     )

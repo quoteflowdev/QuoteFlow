@@ -40,7 +40,6 @@ class ProductRepository:
                 ),
             )
             .order_by(
-                Product.display_order.asc(),
                 Product.product_name.asc(),
             )
             .all()
@@ -66,7 +65,6 @@ class ProductRepository:
                 Product.product_name.ilike(f"%{search}%"),
             )
             .order_by(
-                Product.display_order.asc(),
                 Product.product_name.asc(),
             )
             .offset(skip)
